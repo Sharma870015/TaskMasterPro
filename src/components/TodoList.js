@@ -1,10 +1,10 @@
-// TodoList.js
 import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import ReminderModal from './ReminderModal';
 import ReminderAlert from './ReminderAlert';
+import ConfirmationModal from './ConfirmationModal'; // Import the custom modal
 import { TodosContext } from './TodosContext';
 import { useLocation } from 'react-router-dom';
 import './TodoList.css';
@@ -22,6 +22,8 @@ const TodoList = () => {
   const [alertDescription, setAlertDescription] = useState('');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState('');
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [todoToDelete, setTodoToDelete] = useState(null);
 
   const location = useLocation();
   const username = location.state?.username || localStorage.getItem('username') || '';
@@ -80,14 +82,26 @@ const TodoList = () => {
     setError('');
   };
 
-  const handleDeleteTodo = async (id) => {
+  const handleDeleteTodo = (id) => {
+    setTodoToDelete(id);
+    setIsConfirmationModalOpen(true);
+  };
+
+  const confirmDeleteTodo = async () => {
     try {
-      await axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
-      const updatedTodos = todos.filter((todo) => todo.id !== id);
+      await axios.delete(`https://jsonplaceholder.typicode.com/todos/${todoToDelete}`);
+      const updatedTodos = todos.filter((todo) => todo.id !== todoToDelete);
       setTodos(updatedTodos);
+      setTodoToDelete(null);
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
+    setIsConfirmationModalOpen(false);
+  };
+
+  const cancelDeleteTodo = () => {
+    setTodoToDelete(null);
+    setIsConfirmationModalOpen(false);
   };
 
   const handleEditTodo = (todo) => {
@@ -112,6 +126,12 @@ const TodoList = () => {
   const handleSaveReminder = (date, time) => {
     const updatedTodo = { ...selectedTodo, reminderDate: date, reminderTime: time };
     const updatedTodos = todos.map((todo) => (todo.id === selectedTodo.id ? updatedTodo : todo));
+    setTodos(updatedTodos);
+    setIsReminderModalOpen(false);
+  };
+
+  const handleCancelReminder = () => {
+    const updatedTodos = todos.filter((todo) => todo.id !== selectedTodo.id);
     setTodos(updatedTodos);
     setIsReminderModalOpen(false);
   };
@@ -264,6 +284,7 @@ const TodoList = () => {
           isOpen={isReminderModalOpen}
           onClose={() => setIsReminderModalOpen(false)}
           onSave={handleSaveReminder}
+          onCancel={handleCancelReminder}
         />
       )}
       {isAlertOpen && (
@@ -271,6 +292,14 @@ const TodoList = () => {
           title={alertTitle}
           description={alertDescription}
           onClose={() => setIsAlertOpen(false)}
+        />
+      )}
+      {isConfirmationModalOpen && (
+        <ConfirmationModal
+          isOpen={isConfirmationModalOpen}
+          onConfirm={confirmDeleteTodo}
+          onCancel={cancelDeleteTodo}
+          message="Are you sure you want to delete this todo item?"
         />
       )}
     </div>

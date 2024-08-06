@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import './ReminderModal.css'
+import './ReminderModal.css';
 
-const ReminderModal = ({ isOpen, onClose, onSave }) => {
+const ReminderModal = ({ isOpen, onClose, onSave, onCancel }) => {
   const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
 
@@ -23,6 +23,10 @@ const ReminderModal = ({ isOpen, onClose, onSave }) => {
     } else {
       alert('Please set both date and time');
     }
+  };
+
+  const handleCancel = () => {
+    onCancel();
   };
 
   return (
@@ -49,7 +53,8 @@ const ReminderModal = ({ isOpen, onClose, onSave }) => {
         </div>
         <div className="button-group">
           <button className='for-Save' onClick={handleSave}>Save</button>
-          <button className='for-cancel' onClick={onClose}>Cancel</button>
+          <button className='for-cancel' onClick={handleCancel}>Cancel</button>
+          <button className='for-cancel' onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
