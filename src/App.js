@@ -10,7 +10,7 @@ import Footer from "./components/Footer";
 import LoginPage from "./components/LoginPage";
 import About from './components/About';
 import TodoList from "./components/TodoList";
-import "./App.css"; // Import the main layout CSS
+import "./App.css";
 import { TodosProvider } from "./components/TodosContext";
 
 const App = () => {

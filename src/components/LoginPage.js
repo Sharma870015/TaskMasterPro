@@ -46,6 +46,10 @@ const LoginPage = () => {
     }
 
     if (isValid) {
+      // Store the username in localStorage
+      localStorage.setItem('username', username);
+
+      // Navigate to the todos page with the username
       navigate('/todos', { state: { username } });
     }
   };

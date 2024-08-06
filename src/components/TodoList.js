@@ -1,3 +1,4 @@
+// TodoList.js
 import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,7 +24,7 @@ const TodoList = () => {
   const [error, setError] = useState('');
 
   const location = useLocation();
-  const username = location.state?.username || '';
+  const username = location.state?.username || localStorage.getItem('username') || '';
 
   useEffect(() => {
     const savedTodos = JSON.parse(localStorage.getItem('todos')) || [];
