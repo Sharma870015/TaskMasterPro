@@ -12,19 +12,24 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const usernameInputRef = useRef(null);
 
-
-  // Validate username: must be non-empty and at least 3 characters long
+  // Validate username
   const validateUsername = (username) => {
-    return username.trim().length >= 3; // Adjust as needed
+    const usernameRegex = /^[a-zA-Z0-9_]{3,15}$/; // Alphanumeric + underscore, 3-15 characters
+    return usernameRegex.test(username);
   };
 
-  const validatePassword = (password) => password.length >= 6;
+  // Validate password
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
+    // Minimum 6 characters, at least one uppercase, one lowercase, one number, and one special character
+    return passwordRegex.test(password);
+  };
 
   const handleContinue = () => {
     let isValid = true;
 
     if (!username || !validateUsername(username)) {
-      setUsernameError('Username must be at least 3 characters long');
+      setUsernameError('Username must be 3-15 characters long and can only contain alphanumeric characters and underscores');
       isValid = false;
     } else {
       setUsernameError('');
@@ -34,7 +39,7 @@ const LoginPage = () => {
       setPasswordError('Please enter your password');
       isValid = false;
     } else if (!validatePassword(password)) {
-      setPasswordError('Password must be at least 6 characters long');
+      setPasswordError('Password must be 6-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character');
       isValid = false;
     } else {
       setPasswordError('');
@@ -48,8 +53,10 @@ const LoginPage = () => {
   const handleUsernameChange = (e) => {
     const value = e.target.value;
     setUsername(value);
-    if (!validateUsername(value)) {
-      setUsernameError('Username must be at least 3 characters long');
+    setUsernameError(''); // Clear the error when user types
+
+    if (!validateUsername(value) && value !== '') {
+      setUsernameError('Username must be 3-15 characters long and can only contain alphanumeric characters and underscores');
     } else {
       setUsernameError('');
     }
@@ -58,8 +65,10 @@ const LoginPage = () => {
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    if (!validatePassword(value)) {
-      setPasswordError('Password must be at least 6 characters long');
+    setPasswordError(''); // Clear the error when user types
+
+    if (!validatePassword(value) && value !== '') {
+      setPasswordError('Password must be 6-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character');
     } else {
       setPasswordError('');
     }
@@ -71,6 +80,14 @@ const LoginPage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleFocus = (e) => {
+    if (e.target.id === 'username') {
+      setUsernameError('');
+    } else if (e.target.id === 'password') {
+      setPasswordError('');
+    }
   };
 
   return (
@@ -90,6 +107,7 @@ const LoginPage = () => {
               placeholder="Enter your username"
               value={username}
               onChange={handleUsernameChange}
+              onFocus={handleFocus}
               required
             />
             {usernameError && <p className="error-message">{usernameError}</p>}
@@ -103,6 +121,7 @@ const LoginPage = () => {
               placeholder="Enter your password"
               value={password}
               onChange={handlePasswordChange}
+              onFocus={handleFocus}
               required
             />
             {passwordError && <p className="error-message">{passwordError}</p>}

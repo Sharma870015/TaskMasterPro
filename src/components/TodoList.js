@@ -5,7 +5,7 @@ import { faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import ReminderModal from './ReminderModal';
 import ReminderAlert from './ReminderAlert';
 import { TodosContext } from './TodosContext';
-import { useLocation } from 'react-router-dom'; // Ensure this import
+import { useLocation } from 'react-router-dom';
 import './TodoList.css';
 
 const TodoList = () => {
@@ -20,13 +20,18 @@ const TodoList = () => {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertDescription, setAlertDescription] = useState('');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [error, setError] = useState('');
 
   const location = useLocation();
-  const username = location.state?.username || ''; // Extract username from location.state
+  const username = location.state?.username || '';
 
   useEffect(() => {
     const savedTodos = JSON.parse(localStorage.getItem('todos')) || [];
     setTodos(savedTodos);
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }, []);
 
   useEffect(() => {
@@ -36,52 +41,45 @@ const TodoList = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       checkReminders();
-    }, 1000); // Check every second
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [todos]);
 
-  const handleAddTodo = async () => {
-    if (newTitle.trim() && newDescription.trim()) {
-      const currentDate = new Date().toLocaleString();
-      const newTodoItem = {
-        userId: 1,
-        id: todos.length + 1,
-        title: newTitle,
-        description: newDescription,
-        createdAt: currentDate,
-        completed: false,
-      };
-      const updatedTodos = [newTodoItem, ...todos];
-      setTodos(updatedTodos);
-      setNewTitle('');
-      setNewDescription('');
-      setSelectedTodo(newTodoItem);
-      setIsReminderModalOpen(true);
-    } else {
-      try {
-        const randomLimit = Math.floor(Math.random() * 10) + 1; // Random limit between 1 and 10
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/todos?_limit=${randomLimit}`);
-        const randomTodo = response.data[Math.floor(Math.random() * response.data.length)];
-        const currentDate = new Date().toLocaleString();
-        const newTodoItem = {
-          ...randomTodo,
-          createdAt: currentDate,
-        };
-        const updatedTodos = [newTodoItem, ...todos];
-        setTodos(updatedTodos);
-      } catch (error) {
-        console.error('Error fetching random todo:', error);
-      }
+  const handleAddTodo = () => {
+    if (!newTitle.trim() && !newDescription.trim()) {
+      setError('Please enter a title or description.');
+      return;
     }
+
+    const currentDate = new Date().toLocaleString();
+    const newTodoItem = {
+      userId: 1,
+      id: todos.length + 1,
+      title: newTitle,
+      description: newDescription,
+      createdAt: currentDate,
+      completed: false,
+    };
+    const updatedTodos = [newTodoItem, ...todos];
+    setTodos(updatedTodos);
+    setNewTitle('');
+    setNewDescription('');
+    setSelectedTodo(newTodoItem);
+    setIsReminderModalOpen(true);
+    setError('');
   };
 
   const handleInputChange = (event, setter) => {
     setter(event.target.value);
+    setError('');
+  };
+
+  const handleInputFocus = () => {
+    setError('');
   };
 
   const handleDeleteTodo = async (id) => {
-    console.log('Delete icon clicked for todo with id:', id); // Debugging log
     try {
       await axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
       const updatedTodos = todos.filter((todo) => todo.id !== id);
@@ -92,7 +90,6 @@ const TodoList = () => {
   };
 
   const handleEditTodo = (todo) => {
-    console.log('Edit icon clicked for todo:', todo); // Debugging log
     setEditingTodo(todo);
     setEditingTitle(todo.title);
     setEditingDescription(todo.description);
@@ -134,9 +131,30 @@ const TodoList = () => {
             return t;
           });
           setTodos(sortTodosByDate(updatedTodos));
+          showNotification(todo.title, todo.description);
         }
       }
     });
+  };
+
+  const showNotification = (title, description) => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(title, {
+          body: description,
+          icon: '/path/to/icon.png',
+          badge: '/path/to/badge.png',
+        });
+      });
+    } else if (Notification.permission === 'granted') {
+      new Notification(title, { body: description });
+    } else if (Notification.permission === 'default') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          new Notification(title, { body: description });
+        }
+      });
+    }
   };
 
   const sortTodosByDate = (todos) => {
@@ -144,7 +162,7 @@ const TodoList = () => {
   };
 
   if (!isFetched) {
-    return null; // or return a placeholder if necessary
+    return null;
   }
 
   return (
@@ -164,6 +182,7 @@ const TodoList = () => {
             type="text"
             value={newTitle}
             onChange={(e) => handleInputChange(e, setNewTitle)}
+            onFocus={handleInputFocus}
             placeholder="Enter task title"
           />
           <input
@@ -171,8 +190,10 @@ const TodoList = () => {
             type="text"
             value={newDescription}
             onChange={(e) => handleInputChange(e, setNewDescription)}
+            onFocus={handleInputFocus}
             placeholder="Enter task description"
           />
+          {error && <div className="error-message">{error}</div>}
           <button className="todo-button" onClick={handleAddTodo}>
             Add
           </button>
@@ -188,6 +209,7 @@ const TodoList = () => {
                     type="text"
                     value={editingTitle}
                     onChange={(e) => setEditingTitle(e.target.value)}
+                    onFocus={handleInputFocus}
                   />
                   <input
                     className="for-updatedescr"
@@ -195,6 +217,7 @@ const TodoList = () => {
                     type="text"
                     value={editingDescription}
                     onChange={(e) => setEditingDescription(e.target.value)}
+                    onFocus={handleInputFocus}
                   />
                   <button className="Update-btn" onClick={handleUpdateTodo}>Update</button>
                 </>
@@ -235,11 +258,13 @@ const TodoList = () => {
           ))}
         </ul>
       </div>
-      <ReminderModal
-        isOpen={isReminderModalOpen}
-        onClose={() => setIsReminderModalOpen(false)}
-        onSave={handleSaveReminder}
-      />
+      {isReminderModalOpen && (
+        <ReminderModal
+          isOpen={isReminderModalOpen}
+          onClose={() => setIsReminderModalOpen(false)}
+          onSave={handleSaveReminder}
+        />
+      )}
       {isAlertOpen && (
         <ReminderAlert
           title={alertTitle}

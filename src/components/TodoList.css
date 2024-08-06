@@ -150,6 +150,8 @@
   font-size: 1.1em; /* Reduced font size */
   margin-bottom: 5px; /* Reduced margin */
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+
 }
 
 .todo-description {
@@ -368,4 +370,22 @@ input.todo-input {
   font-size: 1.2em;
   color: #888;
   margin-top: 20px;
+}
+.todo-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.todo-input {
+  margin-bottom: 10px;
+  width: 80%; /* Adjust as necessary */
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9em;
+  margin-top: -8px; /* Adjust as necessary */
+  margin-bottom: 10px;
+  text-align: center;
 }
