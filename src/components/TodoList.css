@@ -181,6 +181,11 @@
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
+input.edit-input {
+  margin-bottom: 10px;
+  border: 1px solid black;
+}
+
 .icon:hover {
   color: #0056b3;
   transform: scale(1.1);
@@ -326,7 +331,6 @@ input.todo-input {
 }
 
 
-/* TodoList.css */
 
 .todo-item {
   margin-bottom: 10px;
@@ -345,7 +349,6 @@ input.todo-input {
 .todo-description {
   color: #666; /* Optional: for better visibility */
 }
-/* TodoList.css */
 
 .todo-info {
   display: flex;
@@ -388,4 +391,97 @@ input.todo-input {
   margin-top: -8px; /* Adjust as necessary */
   margin-bottom: 10px;
   text-align: center;
+}
+
+
+
+/* Base Styles for Success Prompt */
+.success-prompt {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  position: relative;
+}
+
+/* Icon within Success Prompt */
+.success-prompt .icon {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+
+/* Message Text */
+.success-prompt .message {
+  flex: 1;
+}
+
+/* Close Button */
+.success-prompt .close-btn {
+  background: transparent;
+  border: none;
+  color: #155724;
+  font-size: 1.2em;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Responsive Styles */
+
+/* Small devices (phones, 600px and down) */
+@media (max-width: 600px) {
+  .success-prompt {
+    font-size: 0.9em; /* Adjust font size */
+    padding: 10px; /* Adjust padding */
+    margin: 5px 0; /* Adjust margin */
+  }
+
+  .success-prompt .icon {
+    font-size: 1em; /* Adjust icon size */
+  }
+
+  .success-prompt .close-btn {
+    font-size: 1em; /* Adjust close button size */
+    top: 5px;
+    right: 5px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .success-prompt {
+    font-size: 1em; /* Keep font size consistent */
+    padding: 12px; /* Adjust padding */
+  }
+
+  .success-prompt .icon {
+    font-size: 1.1em; /* Slightly larger icon */
+  }
+
+  .success-prompt .close-btn {
+    font-size: 1.1em; /* Slightly larger close button */
+  }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+  .success-prompt {
+    font-size: 1em; /* Adjust font size */
+    padding: 15px; /* Adjust padding */
+  }
+
+  .success-prompt .icon {
+    font-size: 1.2em; /* Maintain icon size */
+  }
+
+  .success-prompt .close-btn {
+    font-size: 1.2em; /* Maintain close button size */
+  }
 }

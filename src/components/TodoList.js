@@ -1,13 +1,15 @@
 import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faEdit, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import ReminderModal from './ReminderModal';
 import ReminderAlert from './ReminderAlert';
-import ConfirmationModal from './ConfirmationModal'; // Import the custom modal
+import ConfirmationModal from './ConfirmationModal';
 import { TodosContext } from './TodosContext';
 import { useLocation } from 'react-router-dom';
 import './TodoList.css';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const TodoList = () => {
   const { todos, setTodos, isFetched } = useContext(TodosContext);
@@ -25,8 +27,8 @@ const TodoList = () => {
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [todoToDelete, setTodoToDelete] = useState(null);
 
-  const location = useLocation();
-  const username = location.state?.username || localStorage.getItem('username') || '';
+  // Retrieve username from localStorage
+  const username = localStorage.getItem('username') || 'User';
 
   useEffect(() => {
     const savedTodos = JSON.parse(localStorage.getItem('todos')) || [];
@@ -35,7 +37,7 @@ const TodoList = () => {
     if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
-  }, []);
+  }, [setTodos]);
 
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
@@ -48,6 +50,35 @@ const TodoList = () => {
 
     return () => clearInterval(interval);
   }, [todos]);
+
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+        navigator.serviceWorker
+          .register(swUrl)
+          .then((registration) => {
+            console.log('Service Worker registered:', registration);
+            // Subscribe to push notifications if permission is granted
+            if (Notification.permission === 'granted') {
+              registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array('<YOUR_PUBLIC_VAPID_KEY>')
+              }).then(subscription => {
+                console.log('Push Subscription:', subscription);
+                // Send subscription to server for later use
+              }).catch(error => {
+                console.error('Push subscription failed:', error);
+              });
+            }
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+  }, []);
 
   const handleAddTodo = () => {
     if (!newTitle.trim() && !newDescription.trim()) {
@@ -118,6 +149,13 @@ const TodoList = () => {
       setEditingTodo(null);
       setEditingTitle('');
       setEditingDescription('');
+
+      // Show success notification
+      toast.success(
+        <div>
+          <FontAwesomeIcon icon={faCheckCircle} /> Todo updated successfully!
+        </div>
+      );
     } catch (error) {
       console.error('Error updating todo:', error);
     }
@@ -159,15 +197,7 @@ const TodoList = () => {
   };
 
   const showNotification = (title, description) => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(title, {
-          body: description,
-          icon: '/path/to/icon.png',
-          badge: '/path/to/badge.png',
-        });
-      });
-    } else if (Notification.permission === 'granted') {
+    if (Notification.permission === 'granted') {
       new Notification(title, { body: description });
     } else if (Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
@@ -191,7 +221,7 @@ const TodoList = () => {
       <div className="greeting-content">
         <div className="avatar">{username[0]?.toUpperCase() || ''}</div>
         <div>
-          <h2 className="greeting">Welcome, {username || 'User'}!</h2>
+          <h2 className="greeting">Welcome, {username}!</h2>
           <p className="welcome-message">Have a productive day!</p>
         </div>
       </div>
@@ -225,19 +255,17 @@ const TodoList = () => {
               {editingTodo && editingTodo.id === todo.id ? (
                 <>
                   <input
-                    className="for-updatelist"
-                    placeholder="Edit Title"
+                    className="edit-input"
                     type="text"
                     value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onChange={(e) => handleInputChange(e, setEditingTitle)}
                     onFocus={handleInputFocus}
                   />
                   <input
-                    className="for-updatedescr"
-                    placeholder="Edit Description"
+                    className="edit-input"
                     type="text"
                     value={editingDescription}
-                    onChange={(e) => setEditingDescription(e.target.value)}
+                    onChange={(e) => handleInputChange(e, setEditingDescription)}
                     onFocus={handleInputFocus}
                   />
                   <button className="Update-btn" onClick={handleUpdateTodo}>Update</button>
@@ -302,8 +330,23 @@ const TodoList = () => {
           message="Are you sure you want to delete this todo item?"
         />
       )}
+      <ToastContainer />
     </div>
   );
+};
+
+// Utility function to convert VAPID key to Uint8Array
+const urlB64ToUint8Array = (base64String) => {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 };
 
 export default TodoList;

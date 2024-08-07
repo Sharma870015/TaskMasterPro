@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -14,20 +14,6 @@ import "./App.css";
 import { TodosProvider } from "./components/TodosContext";
 
 const App = () => {
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('ServiceWorker registered with scope:', registration.scope);
-          })
-          .catch((error) => {
-            console.error('ServiceWorker registration failed:', error);
-          });
-      });
-    }
-  }, []);
-
   return (
     <TodosProvider>
       <Router>
